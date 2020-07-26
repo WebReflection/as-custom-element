@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>as Custom Element</title>
+  <script type="module">
+  import(
+    /^(?:localhost|[::1]|127(?:.d+){3})$/.test(location.hostname) ?
+    '../esm/index.js' :
+    'https://unpkg.com/as-ce?module'
+  )
+  .then(({default: asCustomElement}) => {
+    const setup = {
+      connectedCallback() {
+        console.log(`${this.tagName} connected`);
+      },
+      disconnectedCallback() {
+        console.log(`${this.tagName} disconnected`);
+      },
+      attributeChangedCallback(name, oldVal, newVal) {
+        console.log(`${this.tagName} ${name} from ${oldVal} to ${newVal}`);
+      }
+    };
+    const outer = document.createElement('outer');
+    const inner = outer.appendChild(document.createElement('inner'));
+    asCustomElement(outer, {observedAttributes: ['test'], ...setup});
+    asCustomElement(inner, {observedAttributes: ['test'], ...setup});
+    document.body.appendChild(outer);
+    outer.setAttribute('test', 'value');
+    setTimeout(() => {
+      outer.removeAttribute('test');
+      document.body.removeChild(outer);
+
+      class CeTest extends HTMLElement {
+        static get observedAttributes() { return ['test']; }
+        connectedCallback() {
+          console.log(`${this.tagName} connected`);
+        }
+        disconnectedCallback() {
+          console.log(`${this.tagName} disconnected`);
+        }
+        attributeChangedCallback(name, oldVal, newVal) {
+          console.log(`${this.tagName} ${name} from ${oldVal} to ${newVal}`);
+        }
+      }
+      customElements.define('ce-outer', CeTest);
+      customElements.define('ce-inner', class extends CeTest {});
+      setTimeout(() => {
+        document.body.appendChild(ceOuter);
+        ceOuter.setAttribute('test', 'value');
+        setTimeout(() => {
+          ceOuter.removeAttribute('test');
+          document.body.removeChild(ceOuter);
+          const outer2 = document.createElement('outer');
+          outer2.setAttribute('test', Math.random());
+          document.body.appendChild(asCustomElement(outer2, {observedAttributes: ['test'], ...setup}));
+          setTimeout(() => {
+            outer2.innerHTML = `<ce-outer test="${Math.random()}"></ce-outer>`;
+            setTimeout(() => {
+              asCustomElement(document.body, {observedAttributes: ['test'], ...setup});
+              document.body.textContent = 'OK';
+            }, 100);
+          }, 100);
+        }, 100);
+      }, 100);
+    }, 100);
+    const ceOuter = document.createElement('ce-outer');
+    const ceInner = ceOuter.appendChild(document.createElement('ce-inner'));
+  });
+  </script>
+</head>
+</html>

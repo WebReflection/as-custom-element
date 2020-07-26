@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>as Custom Element</title>
+  <script src="../../index.js"></script>
+  <script>
+  this.onload = function () {
+    var setup = {
+      connectedCallback: function() {
+        console.log(this.tagName, 'connected');
+      },
+      disconnectedCallback: function() {
+        console.log(this.tagName, 'disconnected');
+      },
+      observedAttributes: ['test'],
+      attributeChangedCallback: function(name, oldVal, newVal) {
+        console.log(this.tagName, name, 'from', oldVal, 'to', newVal);
+      }
+    };
+    var outer = document.createElement('outer');
+    var inner = outer.appendChild(document.createElement('inner'));
+    asCustomElement(outer, setup);
+    asCustomElement(inner, setup);
+    document.body.appendChild(outer);
+    outer.setAttribute('test', Math.random());
+    setTimeout(function () {
+      outer.removeAttribute('test');
+      document.body.removeChild(outer);
+      document.body.textContent = 'OK';
+    }, 100);
+  };
+  </script>
+</head>
+</html>
