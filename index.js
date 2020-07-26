@@ -3,21 +3,19 @@ self.asCustomElement = (function (exports) {
 
   var wm = new WeakMap();
 
-  var attributeChanged = function attributeChanged(records) {
-    var _loop = function _loop(i, length) {
-      var _records$i = records[i],
-          attributeName = _records$i.attributeName,
-          oldValue = _records$i.oldValue,
-          target = _records$i.target;
-      var newValue = target.getAttribute(attributeName);
-      wm.get(target).a.forEach(function (callback) {
-        callback.call(target, attributeName, oldValue, newValue);
-      });
-    };
-
+  var attributeChanged = function attributeChanged(records, mo) {
     for (var i = 0, length = records.length; i < length; i++) {
-      _loop(i);
+      var _records$i = records[i],
+          target = _records$i.target,
+          attributeName = _records$i.attributeName,
+          oldValue = _records$i.oldValue;
+      change(wm.get(target).a.get(mo), target, attributeName, oldValue);
     }
+  };
+
+  var change = function change(attributeChangedCallback, target, attributeName, oldValue) {
+    var newValue = target.getAttribute(attributeName);
+    attributeChangedCallback.call(target, attributeName, oldValue, newValue);
   };
 
   var fallback = function fallback() {};
@@ -27,7 +25,7 @@ self.asCustomElement = (function (exports) {
       var target = nodes[i];
 
       if (wm.has(target)) {
-        if (key === 'd') wm.get(target).o.forEach(takeRecords);
+        if (key === 'd') wm.get(target).a.forEach(takeRecords);
         wm.get(target)[key].forEach(call, target);
       }
 
@@ -47,17 +45,16 @@ self.asCustomElement = (function (exports) {
 
   var set = function set(target) {
     var sets = {
-      a: new Set(),
+      a: new Map(),
       c: new Set(),
-      d: new Set(),
-      o: new Set()
+      d: new Set()
     };
     wm.set(target, sets);
     return sets;
   };
 
-  var takeRecords = function takeRecords(mo) {
-    attributeChanged(mo.takeRecords());
+  var takeRecords = function takeRecords(_, mo) {
+    attributeChanged(mo.takeRecords(), mo);
   };
 
   var mo = new MutationObserver(mainLoop);
@@ -75,8 +72,7 @@ self.asCustomElement = (function (exports) {
     var _ref2 = wm.get(target) || set(target),
         a = _ref2.a,
         c = _ref2.c,
-        d = _ref2.d,
-        o = _ref2.o;
+        d = _ref2.d;
 
     if (observedAttributes) {
       var _mo = new MutationObserver(attributeChanged);
@@ -87,17 +83,16 @@ self.asCustomElement = (function (exports) {
         attributeOldValue: true
       });
 
-      a.add(attributeChangedCallback || fallback);
-      o.add(_mo);
+      a.set(_mo, attributeChangedCallback || fallback);
       observedAttributes.forEach(function (attributeName) {
-        if (target.hasAttribute(attributeName)) (attributeChangedCallback || fallback).call(target, attributeName, null, target.getAttribute(attributeName));
+        if (target.hasAttribute(attributeName)) change(attributeChangedCallback || fallback, target, attributeName, null);
       });
     }
 
     c.add(connectedCallback || fallback);
     d.add(disconnectedCallback || fallback); // if (target.isConnected) // No IE11/Edge support
 
-    if (target.ownerDocument.contains(target)) (connectedCallback || fallback).call(target);
+    if (!(target.ownerDocument.compareDocumentPosition(target) & target.DOCUMENT_POSITION_DISCONNECTED)) (connectedCallback || fallback).call(target);
     return target;
   });
 

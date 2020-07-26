@@ -1,14 +1,16 @@
 'use strict';
 const wm = new WeakMap;
 
-const attributeChanged = records => {
+const attributeChanged = (records, mo) => {
   for (let i = 0, {length} = records; i < length; i++) {
-    const {attributeName, oldValue, target} = records[i];
-    const newValue = target.getAttribute(attributeName);
-    wm.get(target).a.forEach(callback => {
-      callback.call(target, attributeName, oldValue, newValue);
-    });
+    const {target, attributeName, oldValue} = records[i];
+    change(wm.get(target).a.get(mo), target, attributeName, oldValue);
   }
+};
+
+const change = (attributeChangedCallback, target, attributeName, oldValue) => {
+  const newValue = target.getAttribute(attributeName);
+  attributeChangedCallback.call(target, attributeName, oldValue, newValue);
 };
 
 const fallback = () => {};
@@ -18,7 +20,7 @@ const invoke = (nodes, key) => {
     const target = nodes[i];
     if (wm.has(target)) {
       if (key === 'd')
-        wm.get(target).o.forEach(takeRecords);
+        wm.get(target).a.forEach(takeRecords);
       wm.get(target)[key].forEach(call, target);
     }
     invoke(target.children || [], key);
@@ -34,13 +36,13 @@ const mainLoop = records => {
 };
 
 const set = target => {
-  const sets = {a: new Set, c: new Set, d: new Set, o: new Set};
+  const sets = {a: new Map, c: new Set, d: new Set};
   wm.set(target, sets);
   return sets;
 };
 
-const takeRecords = mo => {
-  attributeChanged(mo.takeRecords());
+const takeRecords = (_, mo) => {
+  attributeChanged(mo.takeRecords(), mo);
 };
 
 const mo = new MutationObserver(mainLoop);
@@ -62,7 +64,7 @@ module.exports = (
   }
 ) => {
   mainLoop(mo.takeRecords());
-  const {a, c, d, o} = wm.get(target) || set(target);
+  const {a, c, d} = wm.get(target) || set(target);
   if (observedAttributes) {
     const mo = new MutationObserver(attributeChanged);
     mo.observe(target, {
@@ -70,18 +72,19 @@ module.exports = (
       attributeFilter: observedAttributes,
       attributeOldValue: true
     });
-    a.add(attributeChangedCallback || fallback);
-    o.add(mo);
+    a.set(mo, attributeChangedCallback || fallback);
     observedAttributes.forEach(attributeName => {
       if (target.hasAttribute(attributeName))
-        (attributeChangedCallback || fallback)
-          .call(target, attributeName, null, target.getAttribute(attributeName));
+        change(attributeChangedCallback || fallback, target, attributeName, null);
     });
   }
   c.add(connectedCallback || fallback);
   d.add(disconnectedCallback || fallback);
   // if (target.isConnected) // No IE11/Edge support
-  if (target.ownerDocument.contains(target))
+  if (!(
+    target.ownerDocument.compareDocumentPosition(target) &
+    target.DOCUMENT_POSITION_DISCONNECTED
+  ))
     (connectedCallback || fallback).call(target);
   return target;
 };

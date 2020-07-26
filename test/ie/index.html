@@ -29,6 +29,7 @@
       outer.removeAttribute('test');
       document.body.removeChild(outer);
       document.body.textContent = 'OK';
+      asCustomElement(document.body, setup);
     }, 100);
   };
   </script>
