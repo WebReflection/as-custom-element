@@ -8,7 +8,7 @@
   import(
     /^(?:localhost|[::1]|127(?:.d+){3})$/.test(location.hostname) ?
     '../esm/index.js' :
-    'https://unpkg.com/as-ce?module'
+    'https://unpkg.com/as-custom-element?module'
   )
   .then(({default: asCustomElement}) => {
     const setup = {
