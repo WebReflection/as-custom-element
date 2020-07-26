@@ -2,7 +2,7 @@
 
 The easiest way to add Custom Elements like callback to any node.
 
-Compatible with [modern browsers](https://webreflection.github.io/as-custom-element/test/), as well as [IE11](https://webreflection.github.io/as-custom-element/test/ie/), and no polyfills are needed.
+Compatible with [modern browsers](https://webreflection.github.io/as-custom-element/test/), as well as [IE11](https://webreflection.github.io/as-custom-element/test/ie/), and no polyfills are needed, for a total minified size of *~0.6K*.
 
 ```js
 import asCustomElement from 'as-custom-element';
