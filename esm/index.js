@@ -20,11 +20,11 @@ const fallback = () => {};
 
 const invoke = (nodes, key) => {
   for (let i = 0, {length} = nodes; i < length; i++) {
-    const target = nodes[i];
-    if (wm.has(target)) {
+    const target = nodes[i], info = wm.get(target);
+    if (info) {
       if (key === 'd')
-        wm.get(target).a.forEach(takeRecords);
-      wm.get(target)[key].forEach(call, target);
+        info.a.forEach(takeRecords);
+      info[key].forEach(call, target);
     }
     invoke(target.children || [], key);
   }

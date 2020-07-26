@@ -21,11 +21,12 @@ self.asCustomElement = (function (exports) {
 
   var invoke = function invoke(nodes, key) {
     for (var i = 0, length = nodes.length; i < length; i++) {
-      var target = nodes[i];
+      var target = nodes[i],
+          info = wm.get(target);
 
-      if (wm.has(target)) {
-        if (key === 'd') wm.get(target).a.forEach(takeRecords);
-        wm.get(target)[key].forEach(call, target);
+      if (info) {
+        if (key === 'd') info.a.forEach(takeRecords);
+        info[key].forEach(call, target);
       }
 
       invoke(target.children || [], key);
