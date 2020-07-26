@@ -14,8 +14,7 @@ self.asCustomElement = (function (exports) {
   };
 
   var change = function change(attributeChangedCallback, target, attributeName, oldValue) {
-    var newValue = target.getAttribute(attributeName);
-    attributeChangedCallback.call(target, attributeName, oldValue, newValue);
+    attributeChangedCallback.call(target, attributeName, oldValue, target.getAttribute(attributeName));
   };
 
   var fallback = function fallback() {};

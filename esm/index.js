@@ -8,8 +8,12 @@ const attributeChanged = (records, mo) => {
 };
 
 const change = (attributeChangedCallback, target, attributeName, oldValue) => {
-  const newValue = target.getAttribute(attributeName);
-  attributeChangedCallback.call(target, attributeName, oldValue, newValue);
+  attributeChangedCallback.call(
+    target,
+    attributeName,
+    oldValue,
+    target.getAttribute(attributeName)
+  );
 };
 
 const fallback = () => {};
