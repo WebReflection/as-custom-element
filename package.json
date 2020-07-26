@@ -45,5 +45,8 @@
   "bugs": {
     "url": "https://github.com/WebReflection/as-custom-element/issues"
   },
-  "homepage": "https://github.com/WebReflection/as-custom-element#readme"
+  "homepage": "https://github.com/WebReflection/as-custom-element#readme",
+  "dependencies": {
+    "shared-document-observer": "^0.1.2"
+  }
 }

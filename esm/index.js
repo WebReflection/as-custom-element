@@ -1,4 +1,7 @@
+import sdo from 'shared-document-observer';
+
 const wm = new WeakMap;
+const {observer} = sdo;
 
 const attributeChanged = (records, mo) => {
   for (let i = 0, {length} = records; i < length; i++) {
@@ -48,12 +51,7 @@ const takeRecords = (_, mo) => {
   attributeChanged(mo.takeRecords(), mo);
 };
 
-const mo = new MutationObserver(mainLoop);
-
-mo.observe(
-  document,
-  {childList: true, subtree: true}
-);
+sdo.add(mainLoop);
 
 export default (
   target,
@@ -66,7 +64,7 @@ export default (
     attributeChangedCallback
   }
 ) => {
-  mainLoop(mo.takeRecords());
+  mainLoop(observer.takeRecords());
   const {a, c, d} = wm.get(target) || set(target);
   if (observedAttributes) {
     const mo = new MutationObserver(attributeChanged);

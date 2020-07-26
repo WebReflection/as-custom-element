@@ -1,5 +1,8 @@
 'use strict';
+const sdo = (m => m.__esModule ? /* istanbul ignore next */ m.default : /* istanbul ignore next */ m)(require('shared-document-observer'));
+
 const wm = new WeakMap;
+const {observer} = sdo;
 
 const attributeChanged = (records, mo) => {
   for (let i = 0, {length} = records; i < length; i++) {
@@ -49,12 +52,7 @@ const takeRecords = (_, mo) => {
   attributeChanged(mo.takeRecords(), mo);
 };
 
-const mo = new MutationObserver(mainLoop);
-
-mo.observe(
-  document,
-  {childList: true, subtree: true}
-);
+sdo.add(mainLoop);
 
 module.exports = (
   target,
@@ -67,7 +65,7 @@ module.exports = (
     attributeChangedCallback
   }
 ) => {
-  mainLoop(mo.takeRecords());
+  mainLoop(observer.takeRecords());
   const {a, c, d} = wm.get(target) || set(target);
   if (observedAttributes) {
     const mo = new MutationObserver(attributeChanged);
