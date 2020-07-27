@@ -53,7 +53,7 @@ module.exports = (
     attributeChangedCallback
   }
 ) => {
-  mainLoop(observer.takeRecords());
+  // mainLoop(observer.takeRecords());
   const {a, c, d} = wm.get(target) || set(target);
   if (observedAttributes) {
     sao.observe(target, {
