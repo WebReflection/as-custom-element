@@ -59,6 +59,26 @@
             outer2.innerHTML = `<ce-outer test="${Math.random()}"></ce-outer>`;
             setTimeout(() => {
               asCustomElement(document.body, {observedAttributes: ['test'], ...setup});
+              const a = document.createElement('a');
+              const b = document.createElement('b');
+              [a, b].forEach(node => {
+                asCustomElement(node, {
+                  observedAttributes: ['first'],
+                  attributeChangedCallback(name) {
+                    console.log(this.nodeName, name, 'alone');
+                  }
+                });
+                asCustomElement(node, {
+                  observedAttributes: ['first', 'second'],
+                  attributeChangedCallback(name) {
+                    console.log(this.nodeName, name, 'multi');
+                  }
+                });
+              });
+              a.setAttribute('first', 123);
+              a.setAttribute('second', 456);
+              b.setAttribute('first', 123);
+              b.setAttribute('second', 456);
               document.body.textContent = 'OK';
             }, 100);
           }, 100);

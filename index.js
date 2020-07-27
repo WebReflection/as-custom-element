@@ -18,32 +18,27 @@ self.asCustomElement = (function (exports) {
   var wm = new WeakMap();
   var observer$1 = set.observer;
 
-  var attributeChanged = function attributeChanged(records, mo) {
-    for (var i = 0, length = records.length; i < length; i++) {
+  var attributeChanged = function attributeChanged(records) {
+    var _loop = function _loop(i, length) {
       var _records$i = records[i],
           target = _records$i.target,
           attributeName = _records$i.attributeName,
           oldValue = _records$i.oldValue;
-      change(wm.get(target).a.get(mo), target, attributeName, oldValue);
+      var newValue = target.getAttribute(attributeName);
+      wm.get(target).a[attributeName].forEach(function (attributeChangedCallback) {
+        attributeChangedCallback.call(target, attributeName, oldValue, newValue);
+      });
+    };
+
+    for (var i = 0, length = records.length; i < length; i++) {
+      _loop(i);
     }
   };
 
-  var change = function change(attributeChangedCallback, target, attributeName, oldValue) {
-    attributeChangedCallback.call(target, attributeName, oldValue, target.getAttribute(attributeName));
-  };
-
-  var fallback = function fallback() {};
-
   var invoke$1 = function invoke(nodes, key) {
     for (var i = 0, length = nodes.length; i < length; i++) {
-      var target = nodes[i],
-          info = wm.get(target);
-
-      if (info) {
-        if (key === 'd') info.a.forEach(takeRecords);
-        info[key].forEach(call, target);
-      }
-
+      var target = nodes[i];
+      if (wm.has(target)) wm.get(target)[key].forEach(call, target);
       invoke(target.children || [], key);
     }
   };
@@ -54,22 +49,21 @@ self.asCustomElement = (function (exports) {
           addedNodes = _records$i2.addedNodes,
           removedNodes = _records$i2.removedNodes;
       invoke$1(addedNodes, 'c');
+      attributeChanged(sao.takeRecords());
       invoke$1(removedNodes, 'd');
     }
   };
 
+  var sao = new MutationObserver(attributeChanged);
+
   var set$1 = function set(target) {
     var sets = {
-      a: new Map(),
+      a: {},
       c: new Set(),
       d: new Set()
     };
     wm.set(target, sets);
     return sets;
-  };
-
-  var takeRecords = function takeRecords(_, mo) {
-    attributeChanged(mo.takeRecords(), mo);
   };
 
   set.add(mainLoop);
@@ -86,22 +80,25 @@ self.asCustomElement = (function (exports) {
         d = _ref2.d;
 
     if (observedAttributes) {
-      var mo = new MutationObserver(attributeChanged);
-      mo.observe(target, {
+      sao.observe(target, {
         attributes: true,
-        attributeFilter: observedAttributes,
-        attributeOldValue: true
+        attributeOldValue: true,
+        attributeFilter: observedAttributes
       });
-      a.set(mo, attributeChangedCallback || fallback);
       observedAttributes.forEach(function (attributeName) {
-        if (target.hasAttribute(attributeName)) change(attributeChangedCallback || fallback, target, attributeName, null);
+        (a[attributeName] || (a[attributeName] = new Set())).add(attributeChangedCallback);
+        if (target.hasAttribute(attributeName)) attributeChangedCallback.call(target, attributeName, null, target.getAttribute(attributeName));
       });
     }
 
-    c.add(connectedCallback || fallback);
-    d.add(disconnectedCallback || fallback); // if (target.isConnected) // No IE11/Edge support
+    if (disconnectedCallback) d.add(disconnectedCallback);
 
-    if (!(target.ownerDocument.compareDocumentPosition(target) & target.DOCUMENT_POSITION_DISCONNECTED)) (connectedCallback || fallback).call(target);
+    if (connectedCallback) {
+      c.add(connectedCallback); // if (target.isConnected) // No IE11/Edge support
+
+      if (!(target.ownerDocument.compareDocumentPosition(target) & target.DOCUMENT_POSITION_DISCONNECTED)) connectedCallback.call(target);
+    }
+
     return target;
   });
 

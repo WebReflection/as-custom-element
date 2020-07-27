@@ -3,32 +3,21 @@ import sdo from 'shared-document-observer';
 const wm = new WeakMap;
 const {observer} = sdo;
 
-const attributeChanged = (records, mo) => {
+const attributeChanged = records => {
   for (let i = 0, {length} = records; i < length; i++) {
     const {target, attributeName, oldValue} = records[i];
-    change(wm.get(target).a.get(mo), target, attributeName, oldValue);
+    const newValue = target.getAttribute(attributeName);
+    wm.get(target).a[attributeName].forEach(attributeChangedCallback => {
+      attributeChangedCallback.call(target, attributeName, oldValue, newValue);
+    });
   }
 };
 
-const change = (attributeChangedCallback, target, attributeName, oldValue) => {
-  attributeChangedCallback.call(
-    target,
-    attributeName,
-    oldValue,
-    target.getAttribute(attributeName)
-  );
-};
-
-const fallback = () => {};
-
 const invoke = (nodes, key) => {
   for (let i = 0, {length} = nodes; i < length; i++) {
-    const target = nodes[i], info = wm.get(target);
-    if (info) {
-      if (key === 'd')
-        info.a.forEach(takeRecords);
-      info[key].forEach(call, target);
-    }
+    const target = nodes[i];
+    if (wm.has(target))
+      wm.get(target)[key].forEach(call, target);
     invoke(target.children || [], key);
   }
 };
@@ -37,18 +26,17 @@ const mainLoop = records => {
   for (let i = 0, {length} = records; i < length; i++) {
     const {addedNodes, removedNodes} = records[i];
     invoke(addedNodes, 'c');
+    attributeChanged(sao.takeRecords());
     invoke(removedNodes, 'd');
   }
 };
 
+const sao = new MutationObserver(attributeChanged);
+
 const set = target => {
-  const sets = {a: new Map, c: new Set, d: new Set};
+  const sets = {a: {}, c: new Set, d: new Set};
   wm.set(target, sets);
   return sets;
-};
-
-const takeRecords = (_, mo) => {
-  attributeChanged(mo.takeRecords(), mo);
 };
 
 sdo.add(mainLoop);
@@ -67,26 +55,34 @@ export default (
   mainLoop(observer.takeRecords());
   const {a, c, d} = wm.get(target) || set(target);
   if (observedAttributes) {
-    const mo = new MutationObserver(attributeChanged);
-    mo.observe(target, {
+    sao.observe(target, {
       attributes: true,
-      attributeFilter: observedAttributes,
-      attributeOldValue: true
+      attributeOldValue: true,
+      attributeFilter: observedAttributes
     });
-    a.set(mo, attributeChangedCallback || fallback);
     observedAttributes.forEach(attributeName => {
+      (a[attributeName] || (a[attributeName] = new Set))
+        .add(attributeChangedCallback);
       if (target.hasAttribute(attributeName))
-        change(attributeChangedCallback || fallback, target, attributeName, null);
+        attributeChangedCallback.call(
+          target,
+          attributeName,
+          null,
+          target.getAttribute(attributeName)
+        );
     });
   }
-  c.add(connectedCallback || fallback);
-  d.add(disconnectedCallback || fallback);
-  // if (target.isConnected) // No IE11/Edge support
-  if (!(
-    target.ownerDocument.compareDocumentPosition(target) &
-    target.DOCUMENT_POSITION_DISCONNECTED
-  ))
-    (connectedCallback || fallback).call(target);
+  if (disconnectedCallback)
+    d.add(disconnectedCallback);
+  if (connectedCallback) {
+    c.add(connectedCallback);
+    // if (target.isConnected) // No IE11/Edge support
+    if (!(
+      target.ownerDocument.compareDocumentPosition(target) &
+      target.DOCUMENT_POSITION_DISCONNECTED
+    ))
+      connectedCallback.call(target);
+  }
   return target;
 };
 
