@@ -17,7 +17,7 @@ const invoke = (nodes, key, nested) => {
   for (let i = 0, {length} = nodes; i < length; i++) {
     const target = nodes[i];
     if (nested) {
-      if (target.querySelectorAll) {
+      if ('querySelectorAll' in target) {
         if (wm.has(target))
           wm.get(target)[key].forEach(call, target);
         invoke(target.querySelectorAll('*'), key, !nested);

@@ -40,7 +40,7 @@ self.asCustomElement = (function (exports) {
       var target = nodes[i];
 
       if (nested) {
-        if (target.querySelectorAll) {
+        if ('querySelectorAll' in target) {
           if (wm.has(target)) wm.get(target)[key].forEach(call, target);
           invoke(target.querySelectorAll('*'), key, !nested);
         }
