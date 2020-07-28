@@ -27,11 +27,11 @@ const invoke = (nodes, key, parsed, noCheck) => {
 };
 
 const mainLoop = records => {
-  for (let c = new Set, d = new Set, i = 0, {length} = records; i < length; i++) {
+  for (let i = 0, {length} = records; i < length; i++) {
     const {addedNodes, removedNodes} = records[i];
-    invoke(addedNodes, 'c', c, false);
+    invoke(addedNodes, 'c', new Set, false);
     attributeChanged(sao.takeRecords());
-    invoke(removedNodes, 'd', d, false);
+    invoke(removedNodes, 'd', new Set, false);
   }
 };
 

@@ -48,13 +48,13 @@ self.asCustomElement = (function (exports) {
   };
 
   var mainLoop = function mainLoop(records) {
-    for (var c = new Set(), d = new Set(), i = 0, length = records.length; i < length; i++) {
+    for (var i = 0, length = records.length; i < length; i++) {
       var _records$i2 = records[i],
           addedNodes = _records$i2.addedNodes,
           removedNodes = _records$i2.removedNodes;
-      invoke$1(addedNodes, 'c', c, false);
+      invoke$1(addedNodes, 'c', new Set(), false);
       attributeChanged(sao.takeRecords());
-      invoke$1(removedNodes, 'd', d, false);
+      invoke$1(removedNodes, 'd', new Set(), false);
     }
   };
 
