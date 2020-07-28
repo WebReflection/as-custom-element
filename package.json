@@ -48,6 +48,6 @@
   },
   "homepage": "https://github.com/WebReflection/as-custom-element#readme",
   "dependencies": {
-    "shared-document-observer": "^0.1.2"
+    "@webreflection/as-custom-element": "^0.1.0"
   }
 }
