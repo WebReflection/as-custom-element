@@ -56,7 +56,7 @@ self.asCustomElement = (function (exports) {
 
     var sao = new MutationObserver(attributeChanged);
     var sdo = new MutationObserver(mainLoop);
-    sdo.observe(root || document, {
+    sdo.observe(root, {
       childList: true,
       subtree: true
     });
