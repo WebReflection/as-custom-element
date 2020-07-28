@@ -13,21 +13,27 @@ const attributeChanged = records => {
   }
 };
 
-const invoke = (nodes, key) => {
+const invoke = (nodes, key, nested) => {
   for (let i = 0, {length} = nodes; i < length; i++) {
     const target = nodes[i];
-    if (wm.has(target))
+    if (nested) {
+      if (target.querySelectorAll) {
+        if (wm.has(target))
+          wm.get(target)[key].forEach(call, target);
+        invoke(target.querySelectorAll('*'), key, !nested);
+      }
+    }
+    else if (wm.has(target))
       wm.get(target)[key].forEach(call, target);
-    invoke(target.children || [], key);
   }
 };
 
 const mainLoop = records => {
   for (let i = 0, {length} = records; i < length; i++) {
     const {addedNodes, removedNodes} = records[i];
-    invoke(addedNodes, 'c');
+    invoke(addedNodes, 'c', true);
     attributeChanged(sao.takeRecords());
-    invoke(removedNodes, 'd');
+    invoke(removedNodes, 'd', true);
   }
 };
 
@@ -52,7 +58,7 @@ export default (
     attributeChangedCallback
   }
 ) => {
-  // mainLoop(observer.takeRecords());
+  mainLoop(observer.takeRecords());
   const {a, c, d} = wm.get(target) || set(target);
   if (observedAttributes) {
     sao.observe(target, {

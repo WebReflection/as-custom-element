@@ -16,6 +16,7 @@ self.asCustomElement = (function (exports) {
   }
 
   var wm = new WeakMap();
+  var observer$1 = set.observer;
 
   var attributeChanged = function attributeChanged(records) {
     var _loop = function _loop(i, length) {
@@ -34,11 +35,16 @@ self.asCustomElement = (function (exports) {
     }
   };
 
-  var invoke$1 = function invoke(nodes, key) {
+  var invoke$1 = function invoke(nodes, key, nested) {
     for (var i = 0, length = nodes.length; i < length; i++) {
       var target = nodes[i];
-      if (wm.has(target)) wm.get(target)[key].forEach(call, target);
-      invoke(target.children || [], key);
+
+      if (nested) {
+        if (target.querySelectorAll) {
+          if (wm.has(target)) wm.get(target)[key].forEach(call, target);
+          invoke(target.querySelectorAll('*'), key, !nested);
+        }
+      } else if (wm.has(target)) wm.get(target)[key].forEach(call, target);
     }
   };
 
@@ -47,9 +53,9 @@ self.asCustomElement = (function (exports) {
       var _records$i2 = records[i],
           addedNodes = _records$i2.addedNodes,
           removedNodes = _records$i2.removedNodes;
-      invoke$1(addedNodes, 'c');
+      invoke$1(addedNodes, 'c', true);
       attributeChanged(sao.takeRecords());
-      invoke$1(removedNodes, 'd');
+      invoke$1(removedNodes, 'd', true);
     }
   };
 
@@ -71,8 +77,8 @@ self.asCustomElement = (function (exports) {
         disconnectedCallback = _ref.disconnectedCallback,
         observedAttributes = _ref.observedAttributes,
         attributeChangedCallback = _ref.attributeChangedCallback;
+    mainLoop(observer$1.takeRecords());
 
-    // mainLoop(observer.takeRecords());
     var _ref2 = wm.get(target) || set$1(target),
         a = _ref2.a,
         c = _ref2.c,
