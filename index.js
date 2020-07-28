@@ -1,21 +1,7 @@
 self.asCustomElement = (function (exports) {
   'use strict';
 
-  var set = new Set();
-  var observer = new MutationObserver(function (records) {
-    set.forEach(invoke, records);
-  });
-  observer.observe(document, {
-    subtree: true,
-    childList: true
-  });
-  set.observer = observer;
-
-  function invoke(callback) {
-    callback(this, observer);
-  }
-
-  var asCE = (function (selectors) {
+  var asCE = (function (selectors, root) {
     var wm = new WeakMap();
 
     var attributeChanged = function attributeChanged(records) {
@@ -42,7 +28,7 @@ self.asCustomElement = (function (exports) {
         if (!parsed.has(target) && (noCheck || 'querySelectorAll' in target)) {
           parsed.add(target);
           if (wm.has(target)) wm.get(target)[key].forEach(call, target);
-          invoke(target.querySelectorAll(selectors), key, parsed, true);
+          if (selectors.length) invoke(target.querySelectorAll(selectors), key, parsed, true);
         }
       }
     };
@@ -58,7 +44,7 @@ self.asCustomElement = (function (exports) {
       }
     };
 
-    var set$1 = function set(target) {
+    var set = function set(target) {
       var sets = {
         a: {},
         c: new Set(),
@@ -69,15 +55,19 @@ self.asCustomElement = (function (exports) {
     };
 
     var sao = new MutationObserver(attributeChanged);
-    set.add(mainLoop);
+    var sdo = new MutationObserver(mainLoop);
+    sdo.observe(root || document, {
+      childList: true,
+      subtree: true
+    });
     return function (target, _ref) {
       var connectedCallback = _ref.connectedCallback,
           disconnectedCallback = _ref.disconnectedCallback,
           observedAttributes = _ref.observedAttributes,
           attributeChangedCallback = _ref.attributeChangedCallback;
-      mainLoop(set.observer.takeRecords());
+      mainLoop(sdo.takeRecords());
 
-      var _ref2 = wm.get(target) || set$1(target),
+      var _ref2 = wm.get(target) || set(target),
           a = _ref2.a,
           c = _ref2.c,
           d = _ref2.d;
@@ -109,7 +99,7 @@ self.asCustomElement = (function (exports) {
     back.call(this);
   }
 
-  var index = asCE(['*']);
+  var index = asCE(['*'], document);
 
   exports.default = index;
 
