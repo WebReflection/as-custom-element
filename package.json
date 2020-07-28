@@ -1,6 +1,6 @@
 {
   "name": "as-custom-element",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Setup any element as if it was a Custom Element",
   "main": "./cjs/index.js",
   "scripts": {
