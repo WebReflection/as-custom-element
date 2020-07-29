@@ -1,7 +1,7 @@
 self.asCustomElement = (function (exports) {
   'use strict';
 
-  var asCE = (function (selectors, root) {
+  var asCE = (function (root, setup) {
     var wm = new WeakMap();
 
     var attributeChanged = function attributeChanged(records) {
@@ -21,14 +21,14 @@ self.asCustomElement = (function (exports) {
       }
     };
 
-    var invoke = function invoke(nodes, key, parsed, noCheck) {
+    var invoke = function invoke(nodes, key, parsed, isQSA) {
       for (var i = 0, length = nodes.length; i < length; i++) {
         var target = nodes[i];
 
-        if (!parsed.has(target) && (noCheck || 'querySelectorAll' in target)) {
+        if (!parsed.has(target) && (isQSA || 'querySelectorAll' in target)) {
           parsed.add(target);
-          if (wm.has(target)) wm.get(target)[key].forEach(call, target);
-          if (selectors.length) invoke(target.querySelectorAll(selectors), key, parsed, true);
+          if (wm.has(target)) wm.get(target)[key].forEach(call, target);else if (key === 'c') setup(target, parsed);
+          invoke(target.querySelectorAll('*'), key, parsed, true);
         }
       }
     };
@@ -99,7 +99,7 @@ self.asCustomElement = (function (exports) {
     back.call(this);
   }
 
-  var index = asCE(['*'], document);
+  var index = asCE(document, function () {});
 
   exports.default = index;
 
