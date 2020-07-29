@@ -48,6 +48,6 @@
   },
   "homepage": "https://github.com/WebReflection/as-custom-element#readme",
   "dependencies": {
-    "@webreflection/as-custom-element": "^0.1.6"
+    "@webreflection/as-custom-element": "^0.1.8"
   }
 }
