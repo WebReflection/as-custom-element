@@ -1,7 +1,7 @@
 self.asCustomElement = (function (exports) {
   'use strict';
 
-  var asCE = (function (root, upgrade) {
+  var asCE = (function (root, upgrade, query) {
     var wm = new WeakMap();
     var ao = new WeakMap();
     var filter = [].filter;
@@ -22,12 +22,14 @@ self.asCustomElement = (function (exports) {
     };
 
     var mainLoop = function mainLoop(records) {
-      for (var i = 0, length = records.length; i < length; i++) {
-        var _records$i2 = records[i],
-            addedNodes = _records$i2.addedNodes,
-            removedNodes = _records$i2.removedNodes;
-        parse(filter.call(addedNodes, elements), 'c', new Set());
-        parse(filter.call(removedNodes, elements), 'd', new Set());
+      if (query.length) {
+        for (var i = 0, length = records.length; i < length; i++) {
+          var _records$i2 = records[i],
+              addedNodes = _records$i2.addedNodes,
+              removedNodes = _records$i2.removedNodes;
+          parse(filter.call(addedNodes, elements), 'c', new Set());
+          parse(filter.call(removedNodes, elements), 'd', new Set());
+        }
       }
     };
 
@@ -38,7 +40,7 @@ self.asCustomElement = (function (exports) {
         if (!parsed.has(target)) {
           parsed.add(target);
           if (wm.has(target)) wm.get(target)[key].forEach(call, target);else if (key === 'c') upgrade(target);
-          parse(target.querySelectorAll('*'), key, parsed);
+          parse(target.querySelectorAll(query), key, parsed);
         }
       }
     };
@@ -96,7 +98,7 @@ self.asCustomElement = (function (exports) {
     back.call(this);
   }
 
-  var index = asCE(document, function () {});
+  var index = asCE(document, function () {}, ['*']);
 
   exports.default = index;
 
