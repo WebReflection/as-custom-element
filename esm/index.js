@@ -1,3 +1,3 @@
 import asCE from '@webreflection/as-custom-element';
 
-export default asCE(document, () => {});
+export default asCE(document, () => {}, ['*']);
