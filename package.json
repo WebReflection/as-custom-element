@@ -21,7 +21,7 @@
   "author": "Andrea Giammarchi",
   "license": "ISC",
   "devDependencies": {
-    "@babel/core": "^7.10.5",
+    "@babel/core": "^7.11.0",
     "@babel/preset-env": "^7.10.4",
     "@rollup/plugin-babel": "^5.1.0",
     "@rollup/plugin-node-resolve": "^8.4.0",
@@ -48,6 +48,6 @@
   },
   "homepage": "https://github.com/WebReflection/as-custom-element#readme",
   "dependencies": {
-    "@webreflection/as-custom-element": "^0.1.9"
+    "qsa-observer": "^0.1.0"
   }
 }
