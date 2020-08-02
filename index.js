@@ -7,6 +7,8 @@ self.asCustomElement = (function (exports) {
 
   var filter = [].filter;
   var QSAO = (function (options) {
+    var live = new WeakMap();
+
     var callback = function callback(records) {
       var query = options.query;
 
@@ -25,16 +27,41 @@ self.asCustomElement = (function (exports) {
     var loop = function loop(elements, connected, query) {
       var set = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : new Set();
 
-      for (var element, i = 0, length = elements.length; i < length; i++) {
-        if (!set.has(element = elements[i])) {
-          set.add(element);
+      var _loop = function _loop(_selectors, _element, i, length) {
+        if (!set.has(_element = elements[i])) {
+          set.add(_element);
 
-          for (var m = matches(element), _i = 0, _length = query.length; _i < _length; _i++) {
-            if (m.call(element, query[_i])) options.handle(element, connected, query[_i], _i);
+          if (connected) {
+            for (var q, m = matches(_element), _i = 0, _length = query.length; _i < _length; _i++) {
+              if (m.call(_element, q = query[_i])) {
+                if (!live.has(_element)) live.set(_element, new Set());
+                _selectors = live.get(_element);
+
+                if (!_selectors.has(q)) {
+                  _selectors.add(q);
+
+                  options.handle(_element, connected, q);
+                }
+              }
+            }
+          } else if (live.has(_element)) {
+            _selectors = live.get(_element);
+            live["delete"](_element);
+
+            _selectors.forEach(function (q) {
+              options.handle(_element, connected, q);
+            });
           }
 
-          loop(element.querySelectorAll(query), connected, query, set);
+          loop(_element.querySelectorAll(query), connected, query, set);
         }
+
+        selectors = _selectors;
+        element = _element;
+      };
+
+      for (var selectors, element, i = 0, length = elements.length; i < length; i++) {
+        _loop(selectors, element, i);
       }
     };
 
@@ -64,6 +91,7 @@ self.asCustomElement = (function (exports) {
 
   var attributes = new WeakMap();
   var lifecycle = new WeakMap();
+  var query = [];
 
   var attributeChanged = function attributeChanged(records, mo) {
     for (var i = 0, length = records.length; i < length; i++) {
@@ -86,12 +114,13 @@ self.asCustomElement = (function (exports) {
   };
 
   var _QSAO = QSAO({
-    query: ['*'],
+    query: query,
     handle: function handle(element, connected) {
       if (lifecycle.has(element)) lifecycle.get(element)[connected ? 'c' : 'd'].forEach(call, element);
     }
   }),
-      flush = _QSAO.flush;
+      flush = _QSAO.flush,
+      parse = _QSAO.parse;
 
   var index = (function (element, _ref) {
     var connectedCallback = _ref.connectedCallback,
@@ -99,6 +128,8 @@ self.asCustomElement = (function (exports) {
         observedAttributes = _ref.observedAttributes,
         attributeChangedCallback = _ref.attributeChangedCallback;
     flush();
+    var tagName = element.tagName;
+    if (query.indexOf(tagName) < 0) query.push(tagName);
 
     var _ref2 = lifecycle.get(element) || set(element),
         c = _ref2.c,
@@ -121,7 +152,7 @@ self.asCustomElement = (function (exports) {
 
     if (connectedCallback) {
       c.add(connectedCallback);
-      if (!(element.ownerDocument.compareDocumentPosition(element) & element.DOCUMENT_POSITION_DISCONNECTED)) connectedCallback.call(element);
+      if (!(element.ownerDocument.compareDocumentPosition(element) & element.DOCUMENT_POSITION_DISCONNECTED)) parse([element]);
     }
 
     return element;
