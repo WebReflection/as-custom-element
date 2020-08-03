@@ -48,6 +48,6 @@
   },
   "homepage": "https://github.com/WebReflection/as-custom-element#readme",
   "dependencies": {
-    "qsa-observer": "^1.0.0"
+    "qsa-observer": "^1.1.2"
   }
 }
