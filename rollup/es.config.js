@@ -9,6 +9,7 @@ export default {
   context: 'null',
   moduleContext: 'null',
   output: {
+    esModule: false,
     exports: 'named',
     file: './es.js',
     format: 'iife',

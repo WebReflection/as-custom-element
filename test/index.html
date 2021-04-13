@@ -10,7 +10,7 @@
     '../esm/index.js' :
     'https://unpkg.com/as-custom-element?module'
   )
-  .then(({default: asCustomElement}) => {
+  .then(({upgrade}) => {
     const setup = {
       connectedCallback() {
         console.log(`${this.tagName} connected`);
@@ -24,8 +24,8 @@
     };
     const outer = document.createElement('outer');
     const inner = outer.appendChild(document.createElement('inner'));
-    asCustomElement(outer, {observedAttributes: ['test'], ...setup});
-    asCustomElement(inner, {observedAttributes: ['test'], ...setup});
+    upgrade(outer, {observedAttributes: ['test'], ...setup});
+    upgrade(inner, {observedAttributes: ['test'], ...setup});
     document.body.appendChild(outer);
     outer.setAttribute('test', 'value');
     setTimeout(() => {
@@ -54,21 +54,21 @@
           document.body.removeChild(ceOuter);
           const outer2 = document.createElement('outer');
           outer2.setAttribute('test', Math.random());
-          document.body.appendChild(asCustomElement(outer2, {observedAttributes: ['test'], ...setup}));
+          document.body.appendChild(upgrade(outer2, {observedAttributes: ['test'], ...setup}));
           setTimeout(() => {
             outer2.innerHTML = `<ce-outer test="${Math.random()}"></ce-outer>`;
             setTimeout(() => {
-              asCustomElement(document.body, {observedAttributes: ['test'], ...setup});
+              upgrade(document.body, {observedAttributes: ['test'], ...setup});
               const a = document.createElement('a');
               const b = document.createElement('b');
               [a, b].forEach(node => {
-                asCustomElement(node, {
+                upgrade(node, {
                   observedAttributes: ['first'],
                   attributeChangedCallback(name) {
                     console.log(this.nodeName, name, 'alone');
                   }
                 });
-                asCustomElement(node, {
+                upgrade(node, {
                   observedAttributes: ['first', 'second'],
                   attributeChangedCallback(name) {
                     console.log(this.nodeName, name, 'multi');

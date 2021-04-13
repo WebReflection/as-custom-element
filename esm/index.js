@@ -1,59 +1,61 @@
-import QSAO from 'qsa-observer';
+import {notify} from 'element-notifier';
 
-const attributes = new WeakMap;
 const lifecycle = new WeakMap;
-const query = [];
 
-const attributeChanged = (records, o) => {
-  for (let h = attributes.get(o), i = 0, {length} = records; i < length; i++) {
+const attributeChanged = (records, mo) => {
+  for (let i = 0, {length} = records; i < length; i++) {
     const {target, attributeName, oldValue} = records[i];
-    const newValue = target.getAttribute(attributeName);
-    h.call(target, attributeName, oldValue, newValue);
+    if (lifecycle.has(target)) {
+      const {a} = lifecycle.get(target);
+      const newValue = target.getAttribute(attributeName);
+      a.forEach((observedAttributes, attributeChangedCallback) => {
+        if (-1 < observedAttributes.indexOf(attributeName))
+          attributeChangedCallback.call(target, attributeName, oldValue, newValue);
+      });
+    }
+    else
+      mo.disconnect();
   }
 };
 
-const set = element => {
-  const sets = {c: new Set, d: new Set};
-  lifecycle.set(element, sets);
-  return sets;
-};
-
-const {flush, parse} = QSAO({query, handle(element, connected) {
+notify((element, connected) => {
   if (lifecycle.has(element))
-  lifecycle.get(element)[connected ? 'c' : 'd'].forEach(call, element);
-}});
+    lifecycle.get(element)[connected ? 'c' : 'd'].forEach(call, element);
+});
 
-export default (
+export const upgrade = (
   element,
   {
+    upgradedCallback,
     connectedCallback,
     disconnectedCallback,
     observedAttributes,
     attributeChangedCallback
   }
 ) => {
-  flush();
-  const {tagName} = element;
-  if (query.indexOf(tagName) < 0)
-    query.push(tagName);
-  const {c, d} = lifecycle.get(element) || set(element);
-  if (observedAttributes) {
+  if (!lifecycle.has(element))
+    lifecycle.set(element, {a: new Map, c: new Set, d: new Set});
+  if (upgradedCallback)
+    upgradedCallback.call(element);
+  const {a, c, d} = lifecycle.get(element);
+  if (attributeChangedCallback) {
     const mo = new MutationObserver(attributeChanged);
     mo.observe(element, {
       attributes: true,
       attributeOldValue: true,
       attributeFilter: observedAttributes.map(attributeName => {
-        if (element.hasAttribute(attributeName))
+        const value = element.getAttribute(attributeName);
+        if (value != null)
           attributeChangedCallback.call(
             element,
             attributeName,
             null,
-            element.getAttribute(attributeName)
+            value
           );
         return attributeName;
       })
     });
-    attributes.set(mo, attributeChangedCallback);
+    a.set(attributeChangedCallback, observedAttributes);
   }
   if (disconnectedCallback)
     d.add(disconnectedCallback);
@@ -63,7 +65,32 @@ export default (
       element.ownerDocument.compareDocumentPosition(element) &
       element.DOCUMENT_POSITION_DISCONNECTED
     ))
-      parse([element]);
+      connectedCallback.call(element);
+  }
+  return element;
+};
+
+export const downgrade = (
+  element,
+  {
+    downgradedCallback,
+    connectedCallback,
+    disconnectedCallback,
+    attributeChangedCallback
+  }
+) => {
+  if (lifecycle.has(element)) {
+    const {a, c, d} = lifecycle.get(element);
+    if (attributeChangedCallback)
+      a.delete(attributeChangedCallback);
+    if (disconnectedCallback)
+      d.delete(disconnectedCallback);
+    if (connectedCallback)
+      c.delete(connectedCallback);
+    if ((a.size + d.size + c.size) < 1)
+      lifecycle.delete(element);
+    if (downgradedCallback)
+      downgradedCallback.call(element);
   }
   return element;
 };

@@ -21,8 +21,8 @@
     };
     var outer = document.createElement('outer');
     var inner = outer.appendChild(document.createElement('inner'));
-    asCustomElement(outer, setup);
-    asCustomElement(inner, setup);
+    asCustomElement.upgrade(outer, setup);
+    asCustomElement.upgrade(inner, setup);
     document.body.appendChild(outer);
     outer.setAttribute('test', Math.random());
     setTimeout(function () {
@@ -30,7 +30,7 @@
       document.body.removeChild(outer);
       document.body.textContent = 'OK';
       document.body.setAttribute('test', 123);
-      asCustomElement(document.body, setup);
+      asCustomElement.upgrade(document.body, setup);
     }, 100);
   };
   </script>
