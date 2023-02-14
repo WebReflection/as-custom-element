@@ -3,6 +3,7 @@
   "version": "2.0.0",
   "description": "Setup any element as if it was a Custom Element",
   "main": "./cjs/index.js",
+  "types": "./types/index.d.ts",
   "scripts": {
     "build": "npm run cjs && npm run rollup:es && npm run rollup:esm && npm run rollup:babel && npm run min && npm run size",
     "cjs": "ascjs --no-default esm cjs",
