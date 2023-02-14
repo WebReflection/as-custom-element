@@ -1,6 +1,6 @@
 {
   "name": "as-custom-element",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Setup any element as if it was a Custom Element",
   "main": "./cjs/index.js",
   "types": "./types/index.d.ts",
